@@ -4,7 +4,7 @@
   "description": "homework no.1",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js --entry ./src -D"
   },
   "author": "",
   "license": "ISC",

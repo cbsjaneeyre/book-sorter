@@ -1,3 +1,5 @@
+/* eslint-disable array-callback-return */
+
 // node index.js --entry ./src -D
 
 const yargs = require('yargs');
@@ -32,17 +34,13 @@ const args = yargs
   .epilog('first homework')
   .argv;
 
+// sorting books
+
 const config = {
   entry: path.join(__dirname, args.entry),
   dist: path.join(__dirname, args.dist),
   delete: args.delete
 };
-
-const folders = {
-  
-}
-
-// sorting books
 
 function createDist (src, callback) {
   fs.mkdir(src, (error) => {
@@ -70,9 +68,16 @@ function bookSorter (src) {
           bookSorter(currentPath);
         } else {
           createDist(config.dist, () => {
-            createDist(currentPath, () => {
-              // создать путь к папке по имени первой буквы файла
-              // копировать файл в данную папку
+            createDist(currentPath, (error, files) => {
+              if (error) throw error;
+
+              files.map((file) => {
+                const dirname = file.charAt(0).toUpperCase();
+                const dirpath = `/${dirname}`;
+                if (!fs.existsSync(dirpath)) {
+                  createDist();
+                }
+              });
             });
           });
         }
@@ -86,3 +91,6 @@ try {
 } catch (error) {
   console.error(error);
 }
+
+// создать путь к папке по имени первой буквы файла
+// копировать файл в данную папку
