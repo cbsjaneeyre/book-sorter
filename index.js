@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-return */
 /* eslint-disable array-callback-return */
 
 // node index.js --entry ./src -D
@@ -46,8 +47,6 @@ function createDist (src, callback) {
   fs.mkdir(src, (error) => {
     if (error && error.code === 'EEXIST') {
       callback();
-    } else {
-      throw error;
     }
 
     callback();
@@ -68,14 +67,15 @@ function bookSorter (src) {
           bookSorter(currentPath);
         } else {
           createDist(config.dist, () => {
-            createDist(currentPath, (error, files) => {
-              if (error) throw error;
+            const folderName = file[0].toUpperCase();
+            const newPath = path.join(config.dist, folderName);
 
-              files.map((file) => {
-                const dirname = file.charAt(0).toUpperCase();
-                const dirpath = `/${dirname}`;
-                if (!fs.existsSync(dirpath)) {
-                  createDist();
+            createDist(newPath, () => {
+              const finalPath = path.join(newPath, file);
+
+              fs.link(currentPath, finalPath, error => {
+                if (error && error.code === 'EEXIST') {
+                  return;
                 }
               });
             });
