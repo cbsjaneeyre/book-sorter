@@ -1,13 +1,13 @@
 /* eslint-disable no-useless-return */
 /* eslint-disable array-callback-return */
 
-// node index.js --entry ./src -D
-
 const yargs = require('yargs');
 const path = require('path');
 const fs = require('fs');
-
-// arguments
+const util = require('util');
+const mkdir = util.promisify(fs.mkdir);
+const readdir = util.promisify(fs.readdir);
+const link = util.promisify(fs.link);
 
 const args = yargs
   .usage('Usage: node $0 [options]')
@@ -35,13 +35,13 @@ const args = yargs
   .epilog('first homework')
   .argv;
 
-// sorting books
-
 const config = {
   entry: path.join(__dirname, args.entry),
   dist: path.join(__dirname, args.dist),
   delete: args.delete
 };
+
+/*
 
 function createDist (src, callback) {
   fs.mkdir(src, (error) => {
@@ -92,5 +92,43 @@ try {
   console.error(error);
 }
 
-// создать путь к папке по имени первой буквы файла
-// копировать файл в данную папку
+*/
+
+function createDist (src, callback) {
+  mkdir(src)
+    .then(() => {
+      callback();
+    })
+    .catch((error) => {
+      if (error && error.code === 'EEXIST') {
+        callback();
+      }
+    });
+}
+
+(async () => {
+  const files = await readdir(config.entry);
+
+  files.map((file) => {
+    const currentPath = path.join(config.entry, file);
+
+    if (!currentPath) {
+      return;
+    } else {
+      createDist(config.dist);
+    }
+
+    const folderName = file[0].toUpperCase();
+    const newPath = path.join(config.dist, folderName);
+
+    createDist(newPath);
+
+    const finalPath = path.join(newPath, file);
+
+    link(currentPath, finalPath, error => {
+      if (error && error.code === 'EEXIST') {
+        return;
+      }
+    });
+  });
+})();
